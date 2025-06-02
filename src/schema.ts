@@ -4,8 +4,10 @@ import { postRepo } from '../repo/postRepo';
 import { User, Post } from './types';
 import DataLoaderPlugin from '@pothos/plugin-dataloader';
 import DataLoader from 'dataloader';
+import { PubSub } from 'graphql-subscriptions';
 
 export interface ContextType {
+    pubSub: PubSub;
     loadUsersById: DataLoader<string, User | Error>;
     loadPostsByAuthorIds: DataLoader<string, Post[] | Error>;
 }
@@ -89,8 +91,10 @@ builder.mutationType({
                     content: args.content,
                     authorId: args.authorId
                 };
-                ctx.pubSub.publish('COUNT_INCREMENT', ctx.count.value);
-                return await postRepo.createPost(post)
+
+                var newPost = await postRepo.createPost(post)
+                ctx.pubSub.publish('POST_CREATED', newPost);
+                return newPost
             },
         }),
     })
@@ -98,10 +102,12 @@ builder.mutationType({
 
 builder.subscriptionType({
     fields: (t) => ({
-        createdPost: t.int({
-            subscribe: (_parent, _args, ctx) => ctx.pubSub.subscribe('COUNT_INCREMENT'),
-            resolve: (count) => count,
+        postCreated: t.field({
+            type: Post,
+            subscribe: (_parent, _args, ctx) => ctx.pubSub.asyncIterableIterator('POST_CREATED'),
+            resolve: (post: Post) => post,
         }),
     }),
 });
+
 export const schema = builder.toSchema({});
