@@ -9,4 +9,9 @@ export const userRepo = {
         console.log(`[userRepo] getUserById(${id}) called`);
         return users.find((u) => u.id === id);
     },
+    batchGetUsersById: (ids: readonly string[]) => {
+        console.log('[Batch] getUsersById', ids);
+        const result = ids.map((id) => users.find((u) => u.id === id)!);
+        return Promise.resolve(result);
+    }
 };

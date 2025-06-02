@@ -2,47 +2,78 @@ import SchemaBuilder from '@pothos/core';
 import { userRepo } from '../repo/userRepo';
 import { postRepo } from '../repo/postRepo';
 import { User, Post } from './types';
+import DataLoaderPlugin from '@pothos/plugin-dataloader';
+import DataLoader from 'dataloader';
 
-const builder = new SchemaBuilder({});
+export interface ContextType {
+    loadUsersById: DataLoader<string, User | Error>;
+    loadPostsByAuthorIds: DataLoader<string, Post[] | Error>;
+}
 
-const UserRef = builder.objectRef<User>('User');
-const PostRef = builder.objectRef<Post>('Post');
-
-PostRef.implement({
-    fields: (t) => ({
-        id: t.exposeID('id'),
-        content: t.exposeString('content'),
-        author: t.field({
-            type: UserRef,
-            resolve: (post) => userRepo.getUserById(post.authorId)!,
-        }),
-    }),
+const builder = new SchemaBuilder<{
+    Context: ContextType;
+}>({
+    plugins: [DataLoaderPlugin],
 });
 
-UserRef.implement({
+const User = builder.loadableObject('User', {
+    load: (ids: string[], context: ContextType) => context.loadUsersById.loadMany(ids),
     fields: (t) => ({
         id: t.exposeID('id'),
         nickname: t.exposeString('nickname'),
-        image: t.exposeString('image', { nullable: true }),
-        posts: t.field({
-            type: [PostRef],
-            resolve: (user) => postRepo.getPostsByAuthorId(user.id),
-        }),
+        image: t.exposeString('image'),
     }),
 });
+
+// 1. one-to-many relations: return post[][]
+// builder.objectField(User, 'posts', (t) =>
+//     t.loadableList({
+//         type: Post,
+//         load: (ids: string[], context) => context.loadPostsByAuthorIds.loadMany(ids),
+//         resolve: (user, args) => user.id
+//     }),
+// );
+
+// 2. on-to-many relations: return post[]
+builder.objectField(User, 'posts', (t) =>
+    t.loadableGroup({
+        type: Post,
+        load: (ids: string[], context) => postRepo.getPostsByAuthorIds1(ids),
+        group: (post) => post.authorId,
+        resolve: (user, args) => user.id
+    }),
+);
+
+const Post = builder.objectRef<Post>('Post')
+    .implement({
+        fields: (t) => ({
+            id: t.exposeID('id'),
+            content: t.exposeString('content'),
+        }),
+    });
+
+builder.objectField(Post, 'author', (t) =>
+    t.loadable({
+        type: User,
+        load: (ids: string[], context) => context.loadUsersById.loadMany(ids),
+        resolve: (post, args) => post.authorId
+    }),
+);
 
 builder.queryType({
     fields: (t) => ({
-        users: t.field({
-            type: [UserRef],
-            resolve: () => userRepo.getAllUsers(),
-        }),
         posts: t.field({
-            type: [PostRef],
+            type: [Post],
             resolve: () => postRepo.getAllPosts(),
+        }),
+        user: t.field({
+            type: User,
+            args: {
+                id: t.arg.id({ required: true }),
+            },
+            resolve: (parent, args, ctx) => userRepo.getUserById(args.id),
         }),
     }),
 });
-
 
 export const schema = builder.toSchema({});
