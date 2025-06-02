@@ -1,4 +1,6 @@
-import { posts } from '../data';
+import { posts, nextPostId, } from '../data';
+import { Post } from '../src/types';
+
 
 export const postRepo = {
     getAllPosts: () => {
@@ -33,5 +35,16 @@ export const postRepo = {
         }
 
         return Promise.resolve(result);
-    }
+    },
+    createPost: (post: Omit<Post, 'id'>): Promise<Post> => {
+
+        const newPost: Post = {
+            id: String(nextPostId + 1),
+            ...post,
+        };
+        posts.push(newPost);
+        console.log('[postRepo] Created post:', newPost);
+        return Promise.resolve(newPost);
+    },
+
 };

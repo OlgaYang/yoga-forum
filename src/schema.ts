@@ -76,4 +76,32 @@ builder.queryType({
     }),
 });
 
+builder.mutationType({
+    fields: (t) => ({
+        createPost: t.field({
+            type: Post,
+            args: {
+                authorId: t.arg.string({ required: true }),
+                content: t.arg.string({ required: true }),
+            },
+            resolve: async (root, args, ctx) => {
+                const post = {
+                    content: args.content,
+                    authorId: args.authorId
+                };
+                ctx.pubSub.publish('COUNT_INCREMENT', ctx.count.value);
+                return await postRepo.createPost(post)
+            },
+        }),
+    })
+})
+
+builder.subscriptionType({
+    fields: (t) => ({
+        createdPost: t.int({
+            subscribe: (_parent, _args, ctx) => ctx.pubSub.subscribe('COUNT_INCREMENT'),
+            resolve: (count) => count,
+        }),
+    }),
+});
 export const schema = builder.toSchema({});
