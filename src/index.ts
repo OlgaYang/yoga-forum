@@ -19,6 +19,8 @@ const context = () => ({
     loadPostsByAuthorIds: new DataLoader(postRepo.getPostsByAuthorIds1)
 });
 
+console.log(schema)
+
 const yoga = createYoga({
     schema, context
 });

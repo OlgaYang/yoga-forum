@@ -9,6 +9,9 @@ import { PubSub } from 'graphql-subscriptions';
 //metrics
 import TracingPlugin, { wrapResolver, isRootField } from '@pothos/plugin-tracing';
 
+// complexity
+import ComplexityPlugin from '@pothos/plugin-complexity';
+
 export interface ContextType {
     pubSub: PubSub;
     loadUsersById: DataLoader<string, User | Error>;
@@ -18,7 +21,7 @@ export interface ContextType {
 const builder = new SchemaBuilder<{
     Context: ContextType;
 }>({
-    plugins: [DataLoaderPlugin, TracingPlugin],
+    plugins: [DataLoaderPlugin, TracingPlugin, ComplexityPlugin],
     tracing: {
 
         default: (config) => true,
@@ -123,4 +126,13 @@ builder.subscriptionType({
     }),
 });
 
-export const schema = builder.toSchema({});
+export const schema = builder.toSchema({
+    complexity: {
+        limit: {
+            complexity: 500,
+            depth: 3,
+            breadth: 5,
+        },
+
+    },
+});

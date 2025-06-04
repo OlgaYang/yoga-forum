@@ -12,6 +12,7 @@
   "dependencies": {
     "@graphql-yoga/node": "^3.9.1",
     "@pothos/core": "^4.6.2",
+    "@pothos/plugin-complexity": "^4.1.1",
     "@pothos/plugin-dataloader": "^4.4.1",
     "@pothos/plugin-tracing": "^1.1.1",
     "dataloader": "^2.2.3",
