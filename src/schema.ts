@@ -6,6 +6,9 @@ import DataLoaderPlugin from '@pothos/plugin-dataloader';
 import DataLoader from 'dataloader';
 import { PubSub } from 'graphql-subscriptions';
 
+//metrics
+import TracingPlugin, { wrapResolver, isRootField } from '@pothos/plugin-tracing';
+
 export interface ContextType {
     pubSub: PubSub;
     loadUsersById: DataLoader<string, User | Error>;
@@ -15,7 +18,17 @@ export interface ContextType {
 const builder = new SchemaBuilder<{
     Context: ContextType;
 }>({
-    plugins: [DataLoaderPlugin],
+    plugins: [DataLoaderPlugin, TracingPlugin],
+    tracing: {
+
+        default: (config) => true,
+        wrap: (resolver, options, config) =>
+            wrapResolver(resolver, (error, duration) => {
+                const message = `Executed resolver ${config.parentType}.${config.name} in ${duration}ms`;
+                console.log(message);
+            }),
+
+    },
 });
 
 const User = builder.loadableObject('User', {
