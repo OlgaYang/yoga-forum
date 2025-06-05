@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.env
+*.log
+# Ignore GraphQL Codegen output
+/src/__generated__/
+# Ignore firebase setting 
+firebase-service-account.json
