@@ -5,12 +5,18 @@ import { User, Post } from './types';
 import DataLoaderPlugin from '@pothos/plugin-dataloader';
 import DataLoader from 'dataloader';
 import { PubSub } from 'graphql-subscriptions';
+import { pubSub } from './pubsub';
 
 //metrics
 import TracingPlugin, { wrapResolver, isRootField } from '@pothos/plugin-tracing';
 
 // complexity
 import ComplexityPlugin from '@pothos/plugin-complexity';
+
+// smart sub
+import SmartSubscriptionsPlugin, {
+    subscribeOptionsFromIterator,
+} from '@pothos/plugin-smart-subscriptions';
 
 export interface ContextType {
     pubSub: PubSub;
@@ -21,7 +27,7 @@ export interface ContextType {
 const builder = new SchemaBuilder<{
     Context: ContextType;
 }>({
-    plugins: [DataLoaderPlugin, TracingPlugin, ComplexityPlugin],
+    plugins: [DataLoaderPlugin, TracingPlugin, ComplexityPlugin, SmartSubscriptionsPlugin],
     tracing: {
 
         default: (config) => true,
@@ -30,7 +36,9 @@ const builder = new SchemaBuilder<{
                 const message = `Executed resolver ${config.parentType}.${config.name} in ${duration}ms`;
                 console.log(message);
             }),
-
+    },
+    smartSubscriptions: {
+        ...subscribeOptionsFromIterator((name) => pubSub.asyncIterableIterator(name)),
     },
 });
 
@@ -89,10 +97,25 @@ builder.queryType({
             args: {
                 id: t.arg.id({ required: true }),
             },
-            resolve: (parent, args, ctx) => userRepo.getUserById(args.id),
+            resolve: (parent, args, ctx) => {
+                ctx.pubSub.publish('USER_GOT', "tset");
+                return userRepo.getUserById(args.id)
+            }
         }),
     }),
 });
+
+builder.queryFields((t) => ({
+    countManyUser: t.field({
+        type: 'Int',
+        smartSubscription: true,
+        subscribe: (subscriptions) => {
+            subscriptions.register('POST_CREATED')
+            subscriptions.register('USER_GOT')
+        },
+        resolve: (_root, _args, ctx) => 9999,
+    }),
+}));
 
 builder.mutationType({
     fields: (t) => ({
