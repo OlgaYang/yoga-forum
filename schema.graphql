@@ -1,0 +1,17 @@
+type Query {
+    hello: String
+    posts: [Post!]
+  }
+
+  type Post {
+    id: ID!   
+    content: String!
+    author: User!       
+  }
+
+    type User {
+    id: ID!
+    nickname: String!
+    image: String
+    posts: [Post!]!
+  }

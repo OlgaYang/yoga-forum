@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "codegen": "graphql-codegen --config codegen.ts"
   },
   "keywords": [],
   "author": "",
@@ -25,6 +26,10 @@
     "ws": "^8.18.2"
   },
   "devDependencies": {
+    "@graphql-codegen/cli": "5.0.7",
+    "@graphql-codegen/introspection": "^4.0.3",
+    "@graphql-codegen/typescript": "4.1.6",
+    "@graphql-codegen/typescript-resolvers": "4.5.1",
     "@types/node": "^22.15.29",
     "@types/ws": "^8.18.1",
     "ts-node": "^10.9.2",
