@@ -74,17 +74,29 @@ import { createServer } from 'node:http';
 import { createYoga } from 'graphql-yoga';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 
+import { gql } from "graphql-tag";
+import { readFileSync } from "fs";
+import { Resolvers } from './__generated__/types';
+import { Post } from './types';
 
-const typeDefs = /* GraphQL */ `
-  type Query {
-    hello: String
-  }
-`;
+import { userRepo } from '../repo/userRepo';
+import { postRepo } from '../repo/postRepo';
 
-const resolvers = {
+const typeDefs = gql(readFileSync("./schema.graphql", "utf8"));
+
+const resolvers: Resolvers = {
   Query: {
-    hello: () => 'hello world 123',
+    hello: () => "123",
+    posts: () => postRepo.getAllPosts(),
   },
+  Post: {
+    author: (parent) => {
+      return userRepo.getUserById(parent.author.id)
+    },
+  },
+  User: {
+    posts: (parent) => postRepo.getPostsByAuthorId(parent.id)
+  }
 };
 
 const schema = makeExecutableSchema({ typeDefs, resolvers });

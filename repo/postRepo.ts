@@ -1,15 +1,27 @@
 import { posts, nextPostId, } from '../data';
-import { Post } from '../src/types';
+import { Post as PostDB } from '../src/types';
+import { Post } from '../src/__generated__/types'
 
 
 export const postRepo = {
     getAllPosts: () => {
         console.log('[postRepo] getAllPosts called');
-        return posts;
+
+        return posts.map((post): Post => ({
+            id: post.id,
+            content: post.content,
+            author: { id: post.authorId } as any, // 還沒 resolve，後面再補
+        }));
     },
     getPostsByAuthorId: (authorId: string) => {
         console.log(`[postRepo] getPostsByAuthorId(${authorId}) called`);
-        return posts.filter((p) => p.authorId === authorId);
+        const authorPosts = posts.filter((p) => p.authorId === authorId);
+
+        return authorPosts.map((post): Post => ({
+            id: post.id,
+            content: post.content,
+            author: { id: post.authorId } as any, // 還沒 resolve，後面再補
+        }));
     },
 
     getPostsByAuthorIds: (ids: readonly string[]) => {
@@ -38,12 +50,20 @@ export const postRepo = {
     },
     createPost: (post: Omit<Post, 'id'>): Promise<Post> => {
 
-        const newPost: Post = {
-            id: String(nextPostId + 1),
+        const newId = String(nextPostId + 1)
+        const newPostDB: PostDB = {
+            id: newId,
+            authorId: post.author.id,
             ...post,
         };
-        posts.push(newPost);
-        console.log('[postRepo] Created post:', newPost);
+        posts.push(newPostDB);
+        console.log('[postRepo] Created post:', newPostDB);
+
+        const newPost: Post = {
+            id: newId,
+            ...post
+        }
+
         return Promise.resolve(newPost);
     },
 
