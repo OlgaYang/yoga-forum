@@ -7,5 +7,5 @@ export type Post = {
 export type User = {
     id: string;
     nickname: string;
-    image?: string;
+    image: string;
 };

@@ -14,7 +14,7 @@ export const userRepo = {
         if (!user) throw new Error(`User with ID ${id} not found`);
         return {
             ...user,
-            posts: [] // 還沒 resolve，後面再補
+            posts: []  // 還沒 resolve，後面再補            
         }
     },
     batchGetUsersById: (ids: readonly string[]) => {

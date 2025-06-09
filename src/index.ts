@@ -84,6 +84,10 @@ import { postRepo } from '../repo/postRepo';
 
 const typeDefs = gql(readFileSync("./schema.graphql", "utf8"));
 
+// type RequiredResolvers<T> = {
+//   [K in keyof T]-?: NonNullable<T[K]>
+// }
+
 const resolvers: Resolvers = {
   Query: {
     hello: () => "123",

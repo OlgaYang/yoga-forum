@@ -11,6 +11,7 @@ export const postRepo = {
             id: post.id,
             content: post.content,
             author: { id: post.authorId } as any, // 還沒 resolve，後面再補
+
         }));
     },
     getPostsByAuthorId: (authorId: string) => {
@@ -21,6 +22,7 @@ export const postRepo = {
             id: post.id,
             content: post.content,
             author: { id: post.authorId } as any, // 還沒 resolve，後面再補
+
         }));
     },
 
