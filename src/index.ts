@@ -1,9 +1,10 @@
 import { createServer } from 'node:http';
 import { createYoga } from 'graphql-yoga';
-import { makeExecutableSchema } from '@graphql-tools/schema';
-import { resolvers } from './resolver'
 import { gql } from "graphql-tag";
 import { readFileSync } from "fs";
+import { makeExecutableSchema } from '@graphql-tools/schema';
+import { resolvers } from './resolver'
+
 // dataloader
 import DataLoader from 'dataloader'
 import { useDataLoader } from '@envelop/dataloader'
@@ -24,13 +25,12 @@ import { useDisableIntrospection } from '@graphql-yoga/plugin-disable-introspect
 const typeDefs = gql(readFileSync("./schema.graphql", "utf8"));
 
 const schema = makeExecutableSchema({ typeDefs, resolvers });
-const context = () => ({
-  pubSub,
-});
 
 const yoga = createYoga({
   schema,
-  context,
+  context: () => ({
+    pubSub,
+  }),
   plugins: [
     useDataLoader('users', () => new DataLoader(userRepo.batchGetUsersById)),
     useDataLoader('posts', () => new DataLoader(postRepo.batchGetPostsByAuthorId)),
