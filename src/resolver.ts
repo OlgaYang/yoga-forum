@@ -8,9 +8,7 @@ const POST_CREATED = 'POST_CREATED';
 
 export const resolvers: Resolvers = {
     Query: {
-        posts: (parent, args, context) => {
-            return postRepo.getAllPosts();
-        },
+        posts: () => postRepo.getAllPosts(),
     },
     Mutation: {
         addComment: (_, { postId, content }, context) => {
