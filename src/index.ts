@@ -82,30 +82,38 @@ import { Post } from './types';
 import { userRepo } from '../repo/userRepo';
 import { postRepo } from '../repo/postRepo';
 
+import { useDisableIntrospection } from '@graphql-yoga/plugin-disable-introspection'
+
 const typeDefs = gql(readFileSync("./schema.graphql", "utf8"));
-
-// type RequiredResolvers<T> = {
-//   [K in keyof T]-?: NonNullable<T[K]>
-// }
-
+//query, mutation, sub
 const resolvers: Resolvers = {
   Query: {
     hello: () => "123",
     posts: () => postRepo.getAllPosts(),
   },
   Post: {
+    id: (parent) => parent.id,
+    content: (parent) => parent.content,
     author: (parent) => {
       return userRepo.getUserById(parent.author.id)
     },
   },
   User: {
+    id: (parent) => parent.id,
+    nickname: (parent) => parent.nickname,
+    image: (parent) => parent.image,
     posts: (parent) => postRepo.getPostsByAuthorId(parent.id)
   }
 };
 
 const schema = makeExecutableSchema({ typeDefs, resolvers });
 
-const yoga = createYoga({ schema });
+const yoga = createYoga({
+  schema,
+  // graphiql: false,
+  // plugins: [useDisableIntrospection()]
+});
+
 
 const server = createServer(yoga);
 server.listen(4000, () => {
