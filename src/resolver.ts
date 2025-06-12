@@ -1,7 +1,9 @@
-import { Resolvers } from './__generated__/types';
+import { Resolvers, Post } from './__generated__/types';
 
 import { postRepo } from '../repo/postRepo';
 import { commentRepo } from '../repo/commentRepo';
+import { pubSub } from './pubsub';
+const POST_CREATED = 'POST_CREATED';
 
 export const resolvers: Resolvers = {
     Query: {
@@ -9,7 +11,17 @@ export const resolvers: Resolvers = {
     },
     Mutation: {
         addComment: (_, { userId, postId, content }) => commentRepo.addComment(userId, postId, content),
-        createPost: (_, { userId, content }) => postRepo.createPost({ content: content, author: { id: userId } as any })
+        createPost: (_, { userId, content }) => {
+            const post = postRepo.createPost({ content: content, author: { id: userId } as any })
+            pubSub.publish(POST_CREATED, post)
+            return post;
+        }
+    },
+    Subscription: {
+        postCreated: {
+            subscribe: () => pubSub.asyncIterableIterator(POST_CREATED),
+            resolve: (post: Post) => post,
+        },
     },
     Post: {
         id: (parent) => parent.id,

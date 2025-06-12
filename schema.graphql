@@ -6,6 +6,10 @@ type Query {
     addComment( userId:ID! ,postId: ID!, content: String!): Comment!  
   }
 
+  type Subscription {
+   postCreated: Post!
+  }
+
   type Post {
     id: ID!   
     content: String!

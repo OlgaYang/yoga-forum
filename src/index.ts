@@ -81,17 +81,24 @@ import DataLoader from 'dataloader'
 import { useDataLoader } from '@envelop/dataloader'
 import { userRepo } from '../repo/userRepo';
 import { postRepo } from '../repo/postRepo';
-import { User } from './__generated__/types';
-
-import { useDisableIntrospection } from '@graphql-yoga/plugin-disable-introspection'
 import { commentRepo } from '../repo/commentRepo';
+// subscription
+import { useServer } from 'graphql-ws/lib/use/ws';
+import { WebSocketServer } from 'ws';
+import { pubSub } from './pubsub';
+import { useDisableIntrospection } from '@graphql-yoga/plugin-disable-introspection'
+
 
 const typeDefs = gql(readFileSync("./schema.graphql", "utf8"));
 
 const schema = makeExecutableSchema({ typeDefs, resolvers });
+const context = () => ({
+  pubSub,
+});
 
 const yoga = createYoga({
   schema,
+  context,
   plugins: [
     useDataLoader('users', () => new DataLoader(userRepo.batchGetUsersById)),
     useDataLoader('posts', () => new DataLoader(postRepo.batchGetPostsByAuthorId)),
@@ -102,8 +109,22 @@ const yoga = createYoga({
   // plugins: [useDisableIntrospection()]
 });
 
-
 const server = createServer(yoga);
+const wsServer = new WebSocketServer({
+  server: server,
+  path: '/graphql',
+});
+
+useServer(
+  {
+    schema: yoga.getEnveloped().schema,
+    execute: yoga.getEnveloped().execute,
+    subscribe: yoga.getEnveloped().subscribe,
+    context: yoga.getEnveloped().contextFactory,
+  },
+  wsServer
+);
+
 server.listen(4000, () => {
   console.log('🚀 Yoga server running at http://localhost:4000/graphql');
 });
