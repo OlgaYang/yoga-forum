@@ -2,8 +2,8 @@ type Query {
     posts: [Post!]
   }
    type Mutation {
-    createPost( userId:ID! , content: String!): Post!
-    addComment( userId:ID! ,postId: ID!, content: String!): Comment!  
+    createPost( content: String!): Post!
+    addComment( postId: ID!, content: String!): Comment!  
   }
 
   type Subscription {

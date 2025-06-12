@@ -15,7 +15,6 @@ import { commentRepo } from '../repo/commentRepo';
 import { useServer } from 'graphql-ws/lib/use/ws';
 import { WebSocketServer } from 'ws';
 import { pubSub } from './pubsub';
-
 // metric
 import { usePrometheus } from '@graphql-yoga/plugin-prometheus'
 // max depth
@@ -23,12 +22,19 @@ import { envelop, useEnvelop, useValidationRule } from '@envelop/core'
 import { depthLimit } from '@graphile/depth-limit'
 
 import { useDisableIntrospection } from '@graphql-yoga/plugin-disable-introspection'
-
+// jwt
+import jwt from 'jsonwebtoken'
+import {
+  createInlineSigningKeyProvider,
+  createRemoteJwksSigningKeyProvider,
+  extractFromHeader,
+  useJWT
+} from '@graphql-yoga/plugin-jwt'
 
 const typeDefs = gql(readFileSync("./schema.graphql", "utf8"));
 const schema = makeExecutableSchema({ typeDefs, resolvers });
 
-
+const firebaseProjectId = "forum-74a03"
 const plugins = [
   useDataLoader('users', () => new DataLoader(userRepo.batchGetUsersById)),
   useDataLoader('posts', () => new DataLoader(postRepo.batchGetPostsByAuthorId)),
@@ -67,6 +73,26 @@ const plugins = [
       )
     ]
   })),
+  useJWT({
+    signingKeyProviders: [
+      createRemoteJwksSigningKeyProvider({
+        jwksUri: 'https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com'
+      })
+    ],
+    tokenLookupLocations: [
+      extractFromHeader({ name: 'authorization', prefix: 'Bearer' })
+    ],
+    tokenVerification: {
+      issuer: `https://securetoken.google.com/${firebaseProjectId}`,
+      audience: firebaseProjectId,
+      algorithms: ['RS256']
+    },
+    extendContext: true, // default: inject as `context.jwt`
+    reject: {
+      missingToken: false,
+      invalidToken: false
+    }
+  })
 ];
 
 if (process.env.NODE_ENV === 'production') {

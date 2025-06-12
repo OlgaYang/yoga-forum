@@ -1,9 +1,10 @@
 import { Post, User, Comment } from './types';
 
-export const nextUserId = 3;
 export const users: User[] = [
     { id: '1', nickname: 'Olga', image: 'https://example.com/olga.png' },
     { id: '2', nickname: 'Jack', image: 'https://example.com/jack.png' },
+    { id: 'cd2tFvZ5G8WZcpA0sAREuTMUPm22', nickname: 'Andy', image: 'https://example.com/andy.png' },
+    { id: '6wxsEILG9rNRSjUVLLrRwDjum8Z2', nickname: 'Mary', image: 'https://example.com/mary.png' },
 ];
 
 export const posts: Post[] = [

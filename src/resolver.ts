@@ -3,16 +3,29 @@ import { Resolvers, Post } from './__generated__/types';
 import { postRepo } from '../repo/postRepo';
 import { commentRepo } from '../repo/commentRepo';
 import { pubSub } from './pubsub';
+import { GraphQLError } from 'graphql/error';
 const POST_CREATED = 'POST_CREATED';
 
 export const resolvers: Resolvers = {
     Query: {
-        posts: () => postRepo.getAllPosts(),
+        posts: (parent, args, context) => {
+            return postRepo.getAllPosts();
+        },
     },
     Mutation: {
-        addComment: (_, { userId, postId, content }) => commentRepo.addComment(userId, postId, content),
-        createPost: (_, { userId, content }) => {
-            const post = postRepo.createPost({ content: content, author: { id: userId } as any })
+        addComment: (_, { postId, content }, context) => {
+            if (!context.jwt) {
+                throw new GraphQLError('Unauthorized')
+            }
+            const userId = context.jwt.payload.sub;
+            return commentRepo.addComment(userId, postId, content);
+        },
+        createPost: (_, { content }, context) => {
+            if (!context.jwt) {
+                throw new GraphQLError('Unauthorized')
+            }
+
+            const post = postRepo.createPost({ content: content, author: { id: context.jwt.payload.sub } as any })
             pubSub.publish(POST_CREATED, post)
             return post;
         }
