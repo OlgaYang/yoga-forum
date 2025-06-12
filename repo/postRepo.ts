@@ -1,11 +1,10 @@
-import { posts, nextPostId, } from '../data';
+import { posts, nextPostId as getNextPostId, } from '../src/data';
 import { Post as PostDB } from '../src/types';
 import { Post } from '../src/__generated__/types'
 
 
 export const postRepo = {
     getAllPosts: () => {
-        console.log('[postRepo] getAllPosts called');
 
         return posts.map((post): Post => ({
             id: post.id,
@@ -15,7 +14,6 @@ export const postRepo = {
         }));
     },
     getPostsByAuthorId: (authorId: string) => {
-        console.log(`[postRepo] getPostsByAuthorId(${authorId}) called`);
         const authorPosts = posts.filter((p) => p.authorId === authorId);
 
         return authorPosts.map((post): Post => ({
@@ -27,7 +25,6 @@ export const postRepo = {
     },
 
     getPostsByAuthorIds: (ids: readonly string[]) => {
-        console.log(`[postRepo] getPostsByAuthorId(${ids}) called`);
 
         const map = new Map<string, any[]>();
         for (const id of ids) map.set(id, []);
@@ -38,7 +35,6 @@ export const postRepo = {
         return Promise.resolve(ids.map((id) => map.get(id)));
     },
     getPostsByAuthorIds1: (ids: readonly string[]) => {
-        console.log(`[postRepo] getPostsByAuthorIds1(${ids}) called`);
 
         const result: any[] = [];
 
@@ -51,7 +47,6 @@ export const postRepo = {
         return Promise.resolve(result);
     },
     getPostById: (id: string): Post => {
-        console.log(`[postRepo] getPostById(${id}) called`);
         const post = posts.find((p) => p.id === id);
         return {
             ...post,
@@ -60,14 +55,13 @@ export const postRepo = {
     },
     createPost: (post: Omit<Post, 'id'>): Promise<Post> => {
 
-        const newId = String(nextPostId + 1)
+        const newId = String(getNextPostId() + 1)
         const newPostDB: PostDB = {
             id: newId,
             authorId: post.author.id,
             ...post,
         };
         posts.push(newPostDB);
-        console.log('[postRepo] Created post:', newPostDB);
 
         const newPost: Post = {
             id: newId,

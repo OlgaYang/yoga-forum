@@ -1,4 +1,4 @@
-import { comments } from '../data';
+import { comments, nextCommentId as getNextCommentId } from '../src/data';
 import { Comment } from '../src/__generated__/types'
 
 
@@ -7,8 +7,6 @@ export const commentRepo = {
         return comments;
     },
     getCommentsByPostId: (id: string): Comment[] => {
-        console.log(`[commentRepo] getUserByPostId(${id}) called`);
-
         const commentsByPostId = comments
             .filter((comment) => comment.postId === id)
             .map((comment): Comment => ({
@@ -20,4 +18,19 @@ export const commentRepo = {
 
         return commentsByPostId
     },
+    addComment: (userId: string, postId: string, content: string): Comment => {
+        const newComment = {
+            id: (getNextCommentId() + 1).toString(),
+            content,
+            authorId: userId,
+            postId,
+        };
+        comments.push(newComment);
+
+        return {
+            ...newComment,
+            author: { id: newComment.authorId } as any,
+            post: { id: postId } as any
+        } as Comment
+    }
 };

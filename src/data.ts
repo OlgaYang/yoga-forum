@@ -1,4 +1,4 @@
-import { Post, User, Comment } from './src/types';
+import { Post, User, Comment } from './types';
 
 export const nextUserId = 3;
 export const users: User[] = [
@@ -12,9 +12,9 @@ export const posts: Post[] = [
     { id: '3', content: 'Jack says hi', authorId: '2' },
 ];
 
-
 export const comments: Comment[] = [
     { id: '1', content: 'New comment!!', authorId: '1', postId: '1' },
 ];
 
-export const nextPostId = posts.length;
+export const nextCommentId = () => comments.length;
+export const nextPostId = () => posts.length;

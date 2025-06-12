@@ -91,6 +91,9 @@ const resolvers: Resolvers = {
   Query: {
     posts: () => postRepo.getAllPosts(),
   },
+  Mutation: {
+    addComment: (_, { userId, postId, content }) => commentRepo.addComment(userId, postId, content),
+  },
   Post: {
     id: (parent) => parent.id,
     content: (parent) => parent.content,
