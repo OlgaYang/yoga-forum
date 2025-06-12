@@ -86,6 +86,10 @@ import { commentRepo } from '../repo/commentRepo';
 import { useServer } from 'graphql-ws/lib/use/ws';
 import { WebSocketServer } from 'ws';
 import { pubSub } from './pubsub';
+
+// metric
+import { usePrometheus } from '@graphql-yoga/plugin-prometheus'
+
 import { useDisableIntrospection } from '@graphql-yoga/plugin-disable-introspection'
 
 
@@ -104,6 +108,29 @@ const yoga = createYoga({
     useDataLoader('posts', () => new DataLoader(postRepo.batchGetPostsByAuthorId)),
     useDataLoader('post', () => new DataLoader(postRepo.batchGetPostById)),
     useDataLoader('comments', () => new DataLoader(commentRepo.batchGetCommentsByPostId)),
+    usePrometheus({
+      endpoint: '/metrics', // optional, default is `/metrics`, you can disable it by setting it to `false` if registry is configured in "push" mode
+      // Optional, see default values below
+      metrics: {
+        // By default, these are the metrics that are enabled:
+        graphql_envelop_request_time_summary: true,
+        graphql_envelop_phase_parse: true,
+        graphql_envelop_phase_validate: true,
+        graphql_envelop_phase_context: true,
+        graphql_envelop_phase_execute: true,
+        graphql_envelop_phase_subscribe: true,
+        graphql_envelop_error_result: true,
+        graphql_envelop_deprecated_field: true,
+        graphql_envelop_request_duration: true,
+        graphql_envelop_schema_change: true,
+        graphql_envelop_request: true,
+        graphql_yoga_http_duration: true,
+
+        // This metric is disabled by default.
+        // Warning: enabling resolvers level metrics will introduce significant overhead
+        graphql_envelop_execute_resolver: true
+      }
+    })
   ]
   // graphiql: false,
   // plugins: [useDisableIntrospection()]
