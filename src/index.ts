@@ -73,51 +73,13 @@
 import { createServer } from 'node:http';
 import { createYoga } from 'graphql-yoga';
 import { makeExecutableSchema } from '@graphql-tools/schema';
-
+import { resolvers } from './resolver'
 import { gql } from "graphql-tag";
 import { readFileSync } from "fs";
-import { Resolvers } from './__generated__/types';
-import { Post } from './types';
-
-import { userRepo } from '../repo/userRepo';
-import { postRepo } from '../repo/postRepo';
-import { commentRepo } from '../repo/commentRepo';
 
 import { useDisableIntrospection } from '@graphql-yoga/plugin-disable-introspection'
 
 const typeDefs = gql(readFileSync("./schema.graphql", "utf8"));
-//query, mutation, sub
-const resolvers: Resolvers = {
-  Query: {
-    posts: () => postRepo.getAllPosts(),
-  },
-  Mutation: {
-    addComment: (_, { userId, postId, content }) => commentRepo.addComment(userId, postId, content),
-    createPost: (_, { userId, content }) => postRepo.createPost({ content: content, author: { id: userId } as any })
-  },
-  Post: {
-    id: (parent) => parent.id,
-    content: (parent) => parent.content,
-    author: (parent) => {
-      return userRepo.getUserById(parent.author.id)
-    },
-    comments: (parent) => {
-      return commentRepo.getCommentsByPostId(parent.id)
-    }
-  },
-  User: {
-    id: (parent) => parent.id,
-    nickname: (parent) => parent.nickname,
-    image: (parent) => parent.image ?? null,
-    posts: (parent) => postRepo.getPostsByAuthorId(parent.id)
-  },
-  Comment: {
-    id: (parent) => parent.id,
-    content: (parent) => parent.content,
-    author: (parent) => userRepo.getUserById(parent.author.id),
-    post: (parent) => postRepo.getPostById(parent.post.id)
-  }
-};
 
 const schema = makeExecutableSchema({ typeDefs, resolvers });
 
