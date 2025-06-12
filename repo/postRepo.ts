@@ -50,6 +50,14 @@ export const postRepo = {
 
         return Promise.resolve(result);
     },
+    getPostById: (id: string): Post => {
+        console.log(`[postRepo] getPostById(${id}) called`);
+        const post = posts.find((p) => p.id === id);
+        return {
+            ...post,
+            author: { id: post?.authorId } as any
+        } as Post
+    },
     createPost: (post: Omit<Post, 'id'>): Promise<Post> => {
 
         const newId = String(nextPostId + 1)

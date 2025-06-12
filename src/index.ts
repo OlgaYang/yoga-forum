@@ -81,6 +81,7 @@ import { Post } from './types';
 
 import { userRepo } from '../repo/userRepo';
 import { postRepo } from '../repo/postRepo';
+import { commentRepo } from '../repo/commentRepo';
 
 import { useDisableIntrospection } from '@graphql-yoga/plugin-disable-introspection'
 
@@ -88,7 +89,6 @@ const typeDefs = gql(readFileSync("./schema.graphql", "utf8"));
 //query, mutation, sub
 const resolvers: Resolvers = {
   Query: {
-    hello: () => "123",
     posts: () => postRepo.getAllPosts(),
   },
   Post: {
@@ -97,12 +97,21 @@ const resolvers: Resolvers = {
     author: (parent) => {
       return userRepo.getUserById(parent.author.id)
     },
+    comments: (parent) => {
+      return commentRepo.getCommentsByPostId(parent.id)
+    }
   },
   User: {
     id: (parent) => parent.id,
     nickname: (parent) => parent.nickname,
-    image: (parent) => parent.image,
+    image: (parent) => parent.image ?? null,
     posts: (parent) => postRepo.getPostsByAuthorId(parent.id)
+  },
+  Comment: {
+    id: (parent) => parent.id,
+    content: (parent) => parent.content,
+    author: (parent) => userRepo.getUserById(parent.author.id),
+    post: (parent) => postRepo.getPostById(parent.post.id)
   }
 };
 

@@ -8,7 +8,12 @@ const config: CodegenConfig = {
     "src/__generated__/types.ts": {
       plugins: ["typescript", "typescript-resolvers"],
       config: {
-        avoidOptionals: true
+        avoidOptionals: {
+          resolvers: true,
+          query: true,
+          mutation: true,
+          subscription: true,
+        }
       },
     },
     "./graphql.schema.json": {

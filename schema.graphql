@@ -1,14 +1,12 @@
 type Query {
-    hello: String
     posts: [Post!]
-    # comments: [Comment!]
   }
 
   type Post {
     id: ID!   
     content: String!
     author: User!             
-    # comments: [Comment!]
+    comments: [Comment!]
   }
 
     type User {
@@ -18,9 +16,9 @@ type Query {
     posts: [Post!]!
   }
 
-  # type Comment{
-  #   id: ID!
-  #   content: String!
-  #   author: User!
-  #   post: Post!
-  # }
+  type Comment{
+    id: ID!
+    content: String!
+    author: User!
+    post: Post!
+  }

@@ -9,3 +9,11 @@ export type User = {
     nickname: string;
     image: string;
 };
+
+
+export type Comment = {
+    id: string;
+    content: string;
+    authorId: string;
+    postId: string;
+};
