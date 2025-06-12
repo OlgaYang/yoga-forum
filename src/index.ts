@@ -93,6 +93,7 @@ const resolvers: Resolvers = {
   },
   Mutation: {
     addComment: (_, { userId, postId, content }) => commentRepo.addComment(userId, postId, content),
+    createPost: (_, { userId, content }) => postRepo.createPost({ content: content, author: { id: userId } as any })
   },
   Post: {
     id: (parent) => parent.id,
