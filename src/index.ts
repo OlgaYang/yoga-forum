@@ -18,13 +18,17 @@ import { pubSub } from './pubsub';
 
 // metric
 import { usePrometheus } from '@graphql-yoga/plugin-prometheus'
+// max depth
+import { envelop, useEnvelop, useValidationRule } from '@envelop/core'
+import { depthLimit } from '@graphile/depth-limit'
 
 import { useDisableIntrospection } from '@graphql-yoga/plugin-disable-introspection'
 
 
 const typeDefs = gql(readFileSync("./schema.graphql", "utf8"));
-
 const schema = makeExecutableSchema({ typeDefs, resolvers });
+
+
 
 const yoga = createYoga({
   schema,
@@ -57,12 +61,24 @@ const yoga = createYoga({
         // This metric is disabled by default.
         // Warning: enabling resolvers level metrics will introduce significant overhead
         graphql_envelop_execute_resolver: true
-      }
-    })
+      },
+
+    }),
+    useEnvelop(envelop({
+      plugins: [
+        useValidationRule(
+          depthLimit({
+            maxDepth: 6,
+          })
+        )
+      ]
+    })),
   ]
   // graphiql: false,
   // plugins: [useDisableIntrospection()]
 });
+
+
 
 const server = createServer(yoga);
 const wsServer = new WebSocketServer({

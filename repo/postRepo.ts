@@ -29,7 +29,11 @@ export const postRepo = {
         const map = new Map<string, any[]>();
         for (const id of ids) map.set(id, []);
         for (const post of posts) {
-            map.get(post.authorId)?.push(post);
+            map.get(post.authorId)?.push({
+                id: post.id,
+                content: post.content,
+                author: { id: post.authorId } as any, // 還沒 resolve，後面再補
+            });
         }
 
         return Promise.resolve(ids.map((id) => map.get(id)));
