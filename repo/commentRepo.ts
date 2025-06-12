@@ -18,6 +18,19 @@ export const commentRepo = {
 
         return commentsByPostId
     },
+    batchGetCommentsByPostId: (ids: readonly string[]) => {
+        const map = new Map<string, any[]>();
+        for (const id of ids) map.set(id, []);
+        for (const comment of comments) {
+            map.get(comment.postId)?.push({
+                ...comment,
+                author: { id: comment.authorId } as any,
+                post: { id: comment.postId } as any
+            } as Comment);
+        }
+
+        return Promise.resolve(ids.map((id) => map.get(id)));
+    },
     addComment: (userId: string, postId: string, content: string): Comment => {
         const newComment = {
             id: (getNextCommentId() + 1).toString(),

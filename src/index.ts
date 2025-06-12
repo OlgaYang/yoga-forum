@@ -76,8 +76,15 @@ import { makeExecutableSchema } from '@graphql-tools/schema';
 import { resolvers } from './resolver'
 import { gql } from "graphql-tag";
 import { readFileSync } from "fs";
+// dataloader
+import DataLoader from 'dataloader'
+import { useDataLoader } from '@envelop/dataloader'
+import { userRepo } from '../repo/userRepo';
+import { postRepo } from '../repo/postRepo';
+import { User } from './__generated__/types';
 
 import { useDisableIntrospection } from '@graphql-yoga/plugin-disable-introspection'
+import { commentRepo } from '../repo/commentRepo';
 
 const typeDefs = gql(readFileSync("./schema.graphql", "utf8"));
 
@@ -85,6 +92,12 @@ const schema = makeExecutableSchema({ typeDefs, resolvers });
 
 const yoga = createYoga({
   schema,
+  plugins: [
+    useDataLoader('users', () => new DataLoader(userRepo.batchGetUsersById)),
+    useDataLoader('posts', () => new DataLoader(postRepo.batchGetPostsByAuthorId)),
+    useDataLoader('post', () => new DataLoader(postRepo.batchGetPostById)),
+    useDataLoader('comments', () => new DataLoader(commentRepo.batchGetCommentsByPostId)),
+  ]
   // graphiql: false,
   // plugins: [useDisableIntrospection()]
 });

@@ -24,7 +24,7 @@ export const postRepo = {
         }));
     },
 
-    getPostsByAuthorIds: (ids: readonly string[]) => {
+    batchGetPostsByAuthorId: (ids: readonly string[]) => {
 
         const map = new Map<string, any[]>();
         for (const id of ids) map.set(id, []);
@@ -34,24 +34,23 @@ export const postRepo = {
 
         return Promise.resolve(ids.map((id) => map.get(id)));
     },
-    getPostsByAuthorIds1: (ids: readonly string[]) => {
-
-        const result: any[] = [];
-
-        for (const post of posts) {
-            if (ids.includes(post.authorId)) {
-                result.push(post);
-            }
-        }
-
-        return Promise.resolve(result);
-    },
     getPostById: (id: string): Post => {
         const post = posts.find((p) => p.id === id);
         return {
             ...post,
             author: { id: post?.authorId } as any
         } as Post
+    },
+    batchGetPostById: (ids: readonly string[]) => {
+        const result = ids.map((id) => {
+            const post = posts.find((p) => p.id === id);
+            return {
+                ...post,
+                author: { id: post?.authorId } as any
+            } as Post
+        })
+
+        return Promise.resolve(result)
     },
     createPost: (post: Omit<Post, 'id'>): Promise<Post> => {
 
