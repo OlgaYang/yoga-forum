@@ -15,10 +15,10 @@
     id: ID!   
     content: String!
     author: User!             
-    comments: [Comment!]
+    comments(order: SortOrder = ASC, authorId: String): [Comment!]
   }
 
-    type User {
+  type User {
     id: ID!
     nickname: String!
     image: String

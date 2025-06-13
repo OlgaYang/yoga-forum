@@ -39,7 +39,7 @@ export const resolvers: Resolvers = {
         id: (parent) => parent.id,
         content: (parent) => parent.content,
         author: (parent, _, context) => context.users.load(parent.author.id),
-        comments: (parent, _, context) => context.comments.load(parent.id)
+        comments: (parent, args, context) => context.comments.load({ postId: parent.id, args })
     },
     User: {
         id: (parent) => parent.id,

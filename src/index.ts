@@ -30,6 +30,7 @@ import {
   extractFromHeader,
   useJWT
 } from '@graphql-yoga/plugin-jwt'
+import { PostCommentsArgs } from './__generated__/types';
 
 const typeDefs = gql(readFileSync("./schema.graphql", "utf8"));
 const schema = makeExecutableSchema({ typeDefs, resolvers });
@@ -39,7 +40,15 @@ const plugins = [
   useDataLoader('users', () => new DataLoader(userRepo.batchGetUsersById)),
   useDataLoader('posts', () => new DataLoader(postRepo.batchGetPostsByAuthorId)),
   useDataLoader('post', () => new DataLoader(postRepo.batchGetPostById)),
-  useDataLoader('comments', () => new DataLoader(commentRepo.batchGetCommentsByPostId)),
+  useDataLoader('comments', () =>
+    new DataLoader(
+      (keys: readonly { postId: string; args: PostCommentsArgs }[]) =>
+        commentRepo.batchGetCommentsByPostId(keys),
+      {
+        cacheKeyFn: (key) => JSON.stringify(key)
+      }
+    )
+  ),
   usePrometheus({
     endpoint: '/metrics', // optional, default is `/metrics`, you can disable it by setting it to `false` if registry is configured in "push" mode
     // Optional, see default values below
@@ -105,7 +114,7 @@ const yoga = createYoga({
     pubSub,
   }),
   plugins: plugins,
-  graphiql: process.env.NODE_ENV === 'production',
+  graphiql: process.env.NODE_ENV !== 'production',
 });
 
 const server = createServer(yoga);

@@ -1,5 +1,5 @@
 import { comments, nextCommentId as getNextCommentId } from '../src/data';
-import { Comment } from '../src/__generated__/types'
+import { Comment, PostCommentsArgs, SortOrder } from '../src/__generated__/types'
 
 
 export const commentRepo = {
@@ -18,18 +18,34 @@ export const commentRepo = {
 
         return commentsByPostId
     },
-    batchGetCommentsByPostId: (ids: readonly string[]) => {
-        const map = new Map<string, any[]>();
-        for (const id of ids) map.set(id, []);
-        for (const comment of comments) {
-            map.get(comment.postId)?.push({
-                ...comment,
-                author: { id: comment.authorId } as any,
-                post: { id: comment.postId } as any
-            } as Comment);
+    batchGetCommentsByPostId: (keys: readonly { postId: string; args: PostCommentsArgs }[]) => {
+
+        const resultMap = new Map<string, Comment[]>();
+        for (const { postId, args } of keys) {
+
+            let filtered = comments.filter((comment) => comment.postId === postId);
+
+            if (args.authorId && args.authorId.trim() !== '') {
+                filtered = filtered.filter((comment) => comment.authorId === args.authorId);
+            }
+
+            filtered = filtered.sort((a, b) => {
+                return args.order === SortOrder.Asc
+                    ? a.id.localeCompare(b.id)
+                    : b.id.localeCompare(a.id);
+            });
+
+            resultMap.set(
+                postId,
+                filtered.map((comment) => ({
+                    ...comment,
+                    author: { id: comment.authorId } as any,
+                    post: { id: comment.postId } as any,
+                }))
+            );
         }
 
-        return Promise.resolve(ids.map((id) => map.get(id)));
+        return Promise.resolve(keys.map(({ postId }) => resultMap.get(postId) ?? []));
     },
     addComment: (userId: string, postId: string, content: string): Comment => {
         const newComment = {
