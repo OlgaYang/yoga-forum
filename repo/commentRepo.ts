@@ -19,7 +19,6 @@ export const commentRepo = {
         return commentsByPostId
     },
     batchGetCommentsByPostId: (keys: readonly { postId: string; args: PostCommentsArgs }[]) => {
-
         const resultMap = new Map<string, Comment[]>();
         for (const { postId, args } of keys) {
 

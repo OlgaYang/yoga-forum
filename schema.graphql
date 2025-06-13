@@ -1,5 +1,6 @@
   type Query {
     posts(order: SortOrder = DESC, first: Int): [Post!]
+    comments(order:SortOrder = DESC, postId:String): [Comment!]
   }
 
   type Mutation {

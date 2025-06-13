@@ -73,15 +73,15 @@ const plugins = [
     },
 
   }),
-  useEnvelop(envelop({
-    plugins: [
-      useValidationRule(
-        depthLimit({
-          maxDepth: 6,
-        })
-      )
-    ]
-  })),
+  // useEnvelop(envelop({
+  //   plugins: [
+  //     useValidationRule(
+  //       depthLimit({
+  //         maxDepth: 100,
+  //       })
+  //     )
+  //   ]
+  // })),
   useJWT({
     signingKeyProviders: [
       createRemoteJwksSigningKeyProvider({
