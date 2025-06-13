@@ -66,7 +66,6 @@ export const postRepo = {
         return Promise.resolve(result)
     },
     createPost: (post: Omit<Post, 'id'>): Promise<Post> => {
-
         const newId = String(getNextPostId() + 1)
         const newPostDB: PostDB = {
             id: newId,

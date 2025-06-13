@@ -1,5 +1,5 @@
 import { createServer } from 'node:http';
-import { createYoga } from 'graphql-yoga';
+import { createYoga, useExtendContext } from 'graphql-yoga';
 import { gql } from "graphql-tag";
 import { readFileSync } from "fs";
 import { makeExecutableSchema } from '@graphql-tools/schema';
@@ -23,17 +23,18 @@ import { depthLimit } from '@graphile/depth-limit'
 
 import { useDisableIntrospection } from '@graphql-yoga/plugin-disable-introspection'
 // jwt
-import jwt from 'jsonwebtoken'
 import {
-  createInlineSigningKeyProvider,
   createRemoteJwksSigningKeyProvider,
   extractFromHeader,
-  useJWT
+  useJWT,
 } from '@graphql-yoga/plugin-jwt'
 import { PostCommentsArgs } from './__generated__/types';
 
+import { authDirectiveTransformer } from './directives/authDirective'
+
 const typeDefs = gql(readFileSync("./schema.graphql", "utf8"));
-const schema = makeExecutableSchema({ typeDefs, resolvers });
+let schema = makeExecutableSchema({ typeDefs, resolvers });
+schema = authDirectiveTransformer(schema)
 
 const firebaseProjectId = "forum-74a03"
 const plugins = [
@@ -101,7 +102,17 @@ const plugins = [
       missingToken: false,
       invalidToken: false
     }
-  })
+  }),
+  useExtendContext(async (ctx) => {
+    const jwt = ctx.jwt
+    let user = null
+    if (jwt?.payload.sub) {
+      user = await userRepo.getUserById(jwt.payload.sub)
+    }
+    return {
+      user
+    }
+  }),
 ];
 
 if (process.env.NODE_ENV === 'production') {

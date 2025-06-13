@@ -1,11 +1,11 @@
   type Query {
-    posts(order: SortOrder = DESC, first: Int): [Post!]
+    posts(order: SortOrder = DESC, first: Int): [Post!] 
     comments(order:SortOrder = DESC, postId:String): [Comment!]
   }
 
   type Mutation {
-    createPost( content: String!): Post!
-    addComment( postId: ID!, content: String!): Comment!  
+    createPost( content: String!): Post! @auth
+    addComment( postId: ID!, content: String!): Comment! @auth
   }
 
   type Subscription {
@@ -37,3 +37,5 @@
     ASC
     DESC
   }
+
+  directive @auth on FIELD_DEFINITION

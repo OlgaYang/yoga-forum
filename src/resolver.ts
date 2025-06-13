@@ -13,19 +13,10 @@ export const resolvers: Resolvers = {
     },
     Mutation: {
         addComment: (_, { postId, content }, context) => {
-            if (!context.jwt) {
-                throw new GraphQLError('Unauthorized')
-            }
-            const userId = context.jwt.payload.sub;
-            return commentRepo.addComment(userId, postId, content);
+            return commentRepo.addComment(context.user.id, postId, content);
         },
         createPost: (_, { content }, context) => {
-            if (!context.jwt) {
-                throw new GraphQLError('Unauthorized')
-            }
-
-            const userId = context.jwt.payload.sub;
-            const post = postRepo.createPost({ content: content, author: { id: userId } as any })
+            const post = postRepo.createPost({ content: content, author: { id: context.user.id } as any })
             pubSub.publish(POST_CREATED, post)
             return post;
         }
