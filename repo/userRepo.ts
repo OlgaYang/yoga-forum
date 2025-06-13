@@ -1,22 +1,19 @@
 import { users } from '../src/data';
-import { User } from '../src/__generated__/types'
-
+import { User as UserDB } from '../src/types'
 
 export const userRepo = {
     getAllUsers: () => {
         return users;
     },
-    getUserById: (id: string): User => {
-
+    getUserById: (id: string): UserDB => {
         const user = users.find((u) => u.id === id!)
         if (!user) throw new Error(`User with ID ${id} not found`);
         return {
             ...user,
-            posts: []  // 還沒 resolve，後面再補            
         }
     },
-    batchGetUsersById: (ids: readonly string[]) => {
+    batchGetUsersById: (ids: readonly string[]): Promise<UserDB[]> => {
         const result = ids.map((id) => users.find((u) => u.id === id)!);
         return Promise.resolve(result);
-    }
+    },
 };

@@ -41,6 +41,7 @@ const plugins = [
   useDataLoader('users', () => new DataLoader(userRepo.batchGetUsersById)),
   useDataLoader('posts', () => new DataLoader(postRepo.batchGetPostsByAuthorId)),
   useDataLoader('post', () => new DataLoader(postRepo.batchGetPostById)),
+  useDataLoader('comment', () => new DataLoader(commentRepo.batchGetCommentById)),
   useDataLoader('comments', () =>
     new DataLoader(
       (keys: readonly { postId: string; args: PostCommentsArgs }[]) =>

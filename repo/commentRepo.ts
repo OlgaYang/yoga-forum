@@ -1,25 +1,14 @@
 import { comments, nextCommentId as getNextCommentId } from '../src/data';
 import { Comment, PostCommentsArgs, SortOrder } from '../src/__generated__/types'
+import { Comment as CommentDb } from '../src/types'
 
 
 export const commentRepo = {
     getComments: () => {
         return comments;
     },
-    getCommentsByPostId: (id: string): Comment[] => {
-        const commentsByPostId = comments
-            .filter((comment) => comment.postId === id)
-            .map((comment): Comment => ({
-                id: comment.id,
-                content: comment.content,
-                author: { id: comment.authorId } as any, // 先留空，resolver 會補
-                post: { id: comment.postId } as any,   // 先留空，resolver 會補
-            }));
-
-        return commentsByPostId
-    },
     batchGetCommentsByPostId: (keys: readonly { postId: string; args: PostCommentsArgs }[]) => {
-        const resultMap = new Map<string, Comment[]>();
+        const resultMap = new Map<string, CommentDb[]>();
         for (const { postId, args } of keys) {
 
             let filtered = comments.filter((comment) => comment.postId === postId);
@@ -36,15 +25,19 @@ export const commentRepo = {
 
             resultMap.set(
                 postId,
-                filtered.map((comment) => ({
-                    ...comment,
-                    author: { id: comment.authorId } as any,
-                    post: { id: comment.postId } as any,
-                }))
+                filtered.map((comment) => { return comment })
             );
         }
 
         return Promise.resolve(keys.map(({ postId }) => resultMap.get(postId) ?? []));
+    },
+    batchGetCommentById: (ids: readonly string[]): Promise<CommentDb[]> => {
+        const result = ids.map((id) => {
+            const comment = comments.find((p) => p.id === id);
+            return comment as CommentDb;
+        })
+
+        return Promise.resolve(result)
     },
     addComment: (userId: string, postId: string, content: string): Comment => {
         const newComment = {

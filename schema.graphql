@@ -14,23 +14,23 @@
 
   type Post {
     id: ID!   
-    content: String!
-    author: User!             
+    content: String
+    author: User           
     comments(order: SortOrder = ASC, authorId: String): [Comment!]
   }
 
   type User {
     id: ID!
-    nickname: String!
+    nickname: String
     image: String
-    posts: [Post!]!
+    posts: [Post!]
   }
 
   type Comment{
     id: ID!
-    content: String!
-    author: User!
-    post: Post!
+    content: String
+    author: User
+    post: Post
   }
 
   enum SortOrder {
