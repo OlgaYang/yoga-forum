@@ -8,7 +8,7 @@ const POST_CREATED = 'POST_CREATED';
 
 export const resolvers: Resolvers = {
     Query: {
-        posts: () => postRepo.getAllPosts(),
+        posts: (_, args) => postRepo.getAllPosts(args),
     },
     Mutation: {
         addComment: (_, { postId, content }, context) => {
@@ -23,7 +23,8 @@ export const resolvers: Resolvers = {
                 throw new GraphQLError('Unauthorized')
             }
 
-            const post = postRepo.createPost({ content: content, author: { id: context.jwt.payload.sub } as any })
+            const userId = context.jwt.payload.sub;
+            const post = postRepo.createPost({ content: content, author: { id: userId } as any })
             pubSub.publish(POST_CREATED, post)
             return post;
         }

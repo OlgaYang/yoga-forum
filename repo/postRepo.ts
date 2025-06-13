@@ -1,16 +1,25 @@
 import { posts, nextPostId as getNextPostId, } from '../src/data';
 import { Post as PostDB } from '../src/types';
-import { Post } from '../src/__generated__/types'
+import { Post, QueryPostsArgs, SortOrder } from '../src/__generated__/types'
 
 
 export const postRepo = {
-    getAllPosts: () => {
+    getAllPosts: (args: QueryPostsArgs) => {
 
-        return posts.map((post): Post => ({
+        const sorted = [...posts].sort((a, b) => {
+            if (args.order === SortOrder.Asc) {
+                return a.id.localeCompare(b.id); // 假設 id 是字串型別
+            } else {
+                return b.id.localeCompare(a.id);
+            }
+        });
+
+        const sliced = typeof args.first === 'number' ? sorted.slice(0, args.first) : sorted;
+
+        return sliced.map((post): Post => ({
             id: post.id,
             content: post.content,
-            author: { id: post.authorId } as any, // 還沒 resolve，後面再補
-
+            author: { id: post.authorId } as any,
         }));
     },
     getPostsByAuthorId: (authorId: string) => {

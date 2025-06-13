@@ -1,7 +1,8 @@
-type Query {
-    posts: [Post!]
+  type Query {
+    posts(order: SortOrder = DESC, first: Int): [Post!]
   }
-   type Mutation {
+
+  type Mutation {
     createPost( content: String!): Post!
     addComment( postId: ID!, content: String!): Comment!  
   }
@@ -29,4 +30,9 @@ type Query {
     content: String!
     author: User!
     post: Post!
+  }
+
+  enum SortOrder {
+    ASC
+    DESC
   }
