@@ -13,9 +13,7 @@ export const resolvers: Resolvers = {
         comments: async (_, args, context) => await context.comments.load({ postId: args.postId, args })
     },
     Mutation: {
-        addComment: (_, { postId, content }, context) => {
-            return commentRepo.addComment(context.user.id, postId, content);
-        },
+        addComment: (_, { postId, content }, context) => commentRepo.addComment(context.user.id, postId, content),
         createPost: async (_, { content }, context) => {
             const post = await postRepo.createPost(context.user.id, content)
             pubSub.publish(POST_CREATED, post)
@@ -31,10 +29,7 @@ export const resolvers: Resolvers = {
     Post: {
         id: (parent) => parent.id,
         content: (parent) => parent.content ?? null,
-        author: async (parent, _, context) => {
-            const post = await context.post.load(parent.id)
-            return context.users.load(post.authorId);
-        },
+        author: async (parent: PostMapper, _, context) => context.users.load(parent.authorId),
         comments: async (parent, args, context) => await context.comments.load({ postId: parent.id, args })
     },
     User: {
@@ -46,11 +41,7 @@ export const resolvers: Resolvers = {
     Comment: {
         id: (parent) => parent.id,
         content: async (parent) => parent.content ?? null,
-        author: async (parent: CommentMapper, _, context) => {
-            return context.users.load(parent.authorId)
-        },
-        post: async (parent: CommentMapper, _, context) => {
-            return context.post.load(parent.postId);
-        }
+        author: async (parent: CommentMapper, _, context) => context.users.load(parent.authorId),
+        post: async (parent: CommentMapper, _, context) => context.post.load(parent.postId)
     }
 };
