@@ -1,61 +1,50 @@
 import { posts, nextPostId as getNextPostId, } from '../src/data';
-import { Post as PostDB } from '../src/types';
+import { PostMapper } from '../src/types';
 import { Post, QueryPostsArgs, SortOrder } from '../src/__generated__/types'
 
 
 export const postRepo = {
-    getAllPosts: (args: QueryPostsArgs) => {
-
+    getAllPosts: (args: QueryPostsArgs): PostMapper[] => {
         const sorted = [...posts].sort((a, b) => {
             if (args.order === SortOrder.Asc) {
-                return a.id.localeCompare(b.id); // 假設 id 是字串型別
+                return a.id.localeCompare(b.id);
             } else {
                 return b.id.localeCompare(a.id);
             }
         });
 
-        const sliced = typeof args.first === 'number' ? sorted.slice(0, args.first) : sorted;
-
-        return sliced.map((post): Post => ({
-            id: post.id,
-            content: post.content,
-            author: { id: post.authorId } as any,
-        }));
+        return typeof args.first === 'number' ? sorted.slice(0, args.first) : sorted;
     },
 
-    batchGetPostsByAuthorId: (ids: readonly string[]) => {
+    batchGetPostsByAuthorId: (ids: readonly string[]): Promise<PostMapper[][]> => {
 
-        const map = new Map<string, PostDB[]>();
+        const map = new Map<string, PostMapper[]>();
         for (const id of ids) map.set(id, []);
         for (const post of posts) {
             map.get(post.authorId)?.push(post);
         }
 
-        return Promise.resolve(ids.map((id) => map.get(id)));
+        const result = ids.map((id) => map.get(id) ?? []);
+        return Promise.resolve(result);
     },
 
-    batchGetPostById: (ids: readonly string[]): Promise<PostDB[]> => {
+    batchGetPostById: (ids: readonly string[]): Promise<PostMapper[]> => {
         const result = ids.map((id) => {
             const post = posts.find((p) => p.id === id);
-            return post as PostDB;
+            return post as PostMapper;
         })
 
         return Promise.resolve(result)
     },
-    createPost: (authorId: string, content: string): Promise<Post> => {
+    createPost: (authorId: string, content: string): Promise<PostMapper> => {
         const newId = String(getNextPostId() + 1)
-        const newPostDB: PostDB = {
+        const newPostMapper: PostMapper = {
             id: newId,
             authorId: authorId,
             content: content
         };
-        posts.push(newPostDB);
+        posts.push(newPostMapper);
 
-        const newPost: Post = {
-            id: newId,
-            content: content
-        }
-
-        return Promise.resolve(newPost);
+        return Promise.resolve(newPostMapper);
     },
 };

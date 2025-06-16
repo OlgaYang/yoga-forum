@@ -1,6 +1,6 @@
 import { comments, nextCommentId as getNextCommentId } from '../src/data';
 import { Comment, PostCommentsArgs, SortOrder } from '../src/__generated__/types'
-import { Comment as CommentDb } from '../src/types'
+import { CommentMapper } from '../src/types'
 
 
 export const commentRepo = {
@@ -8,7 +8,7 @@ export const commentRepo = {
         return comments;
     },
     batchGetCommentsByPostId: (keys: readonly { postId: string; args: PostCommentsArgs }[]) => {
-        const resultMap = new Map<string, CommentDb[]>();
+        const resultMap = new Map<string, CommentMapper[]>();
         for (const { postId, args } of keys) {
 
             let filtered = comments.filter((comment) => comment.postId === postId);
@@ -31,15 +31,15 @@ export const commentRepo = {
 
         return Promise.resolve(keys.map(({ postId }) => resultMap.get(postId) ?? []));
     },
-    batchGetCommentById: (ids: readonly string[]): Promise<CommentDb[]> => {
+    batchGetCommentById: (ids: readonly string[]): Promise<CommentMapper[]> => {
         const result = ids.map((id) => {
             const comment = comments.find((p) => p.id === id);
-            return comment as CommentDb;
+            return comment as CommentMapper;
         })
 
         return Promise.resolve(result)
     },
-    addComment: (userId: string, postId: string, content: string): Comment => {
+    addComment: (userId: string, postId: string, content: string): CommentMapper => {
         const newComment = {
             id: (getNextCommentId() + 1).toString(),
             content,
@@ -48,10 +48,6 @@ export const commentRepo = {
         };
         comments.push(newComment);
 
-        return {
-            ...newComment,
-            author: { id: newComment.authorId } as any,
-            post: { id: postId } as any
-        } as Comment
+        return newComment;
     }
 };

@@ -31,6 +31,7 @@ import {
 import { PostCommentsArgs } from './__generated__/types';
 
 import { authDirectiveTransformer } from './directives/authDirective'
+import { UserMapper } from './types';
 
 const typeDefs = gql(readFileSync("./schema.graphql", "utf8"));
 let schema = makeExecutableSchema({ typeDefs, resolvers });
@@ -38,7 +39,7 @@ schema = authDirectiveTransformer(schema)
 
 const firebaseProjectId = "forum-74a03"
 const plugins = [
-  useDataLoader('users', () => new DataLoader(userRepo.batchGetUsersById)),
+  useDataLoader('users', () => new DataLoader<string, UserMapper>(userRepo.batchGetUsersById)),
   useDataLoader('posts', () => new DataLoader(postRepo.batchGetPostsByAuthorId)),
   useDataLoader('post', () => new DataLoader(postRepo.batchGetPostById)),
   useDataLoader('comment', () => new DataLoader(commentRepo.batchGetCommentById)),

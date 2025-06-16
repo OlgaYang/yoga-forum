@@ -13,6 +13,11 @@ const config: CodegenConfig = {
           query: true,
           mutation: true,
           subscription: true,
+        },
+        mappers: {
+          Post: '../types#PostMapper',
+          User: '../types#UserMapper',
+          Comment: '../types#CommentMapper',
         }
       },
     },

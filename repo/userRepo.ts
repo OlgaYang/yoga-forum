@@ -1,5 +1,5 @@
 import { users } from '../src/data';
-import { User as UserDB } from '../src/types'
+import { UserMapper as UserDB } from '../src/types'
 
 export const userRepo = {
     getAllUsers: () => {

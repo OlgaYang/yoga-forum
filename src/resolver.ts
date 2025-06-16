@@ -3,12 +3,13 @@ import { Resolvers, Post } from './__generated__/types';
 import { postRepo } from '../repo/postRepo';
 import { commentRepo } from '../repo/commentRepo';
 import { pubSub } from './pubsub';
+import { CommentMapper, PostMapper, UserMapper } from './types';
 
 const POST_CREATED = 'POST_CREATED';
 
 export const resolvers: Resolvers = {
     Query: {
-        posts: (_, args) => postRepo.getAllPosts(args),
+        posts: (_, args): PostMapper[] => postRepo.getAllPosts(args),
         comments: async (_, args, context) => await context.comments.load({ postId: args.postId, args })
     },
     Mutation: {
@@ -24,7 +25,7 @@ export const resolvers: Resolvers = {
     Subscription: {
         postCreated: {
             subscribe: () => pubSub.asyncIterableIterator(POST_CREATED),
-            resolve: (post: Post) => post,
+            resolve: (post: PostMapper) => post,
         },
     },
     Post: {
@@ -45,13 +46,11 @@ export const resolvers: Resolvers = {
     Comment: {
         id: (parent) => parent.id,
         content: async (parent) => parent.content ?? null,
-        author: async (parent, _, context) => {
-            const comment = await context.comment.load(parent.id)
-            return context.users.load(comment.authorId);
+        author: async (parent: CommentMapper, _, context) => {
+            return context.users.load(parent.authorId)
         },
-        post: async (parent, _, context) => {
-            const comment = await context.comment.load(parent.id);
-            return context.users.load(comment.postId);
+        post: async (parent: CommentMapper, _, context) => {
+            return context.post.load(parent.postId);
         }
     }
 };
