@@ -149,3 +149,5 @@ useServer(
 server.listen(4000, () => {
   console.log('🚀 Yoga server running at http://localhost:4000/graphql');
 });
+
+export default server
