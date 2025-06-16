@@ -10,3 +10,9 @@ npm run codegen
 ```sh
 npm run start
 ```
+
+### Runing Tests
+
+```sh
+npm run test
+```
