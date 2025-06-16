@@ -1,13 +1,11 @@
 import { comments, nextCommentId as getNextCommentId } from '../src/data';
-import { Comment, PostCommentsArgs, SortOrder } from '../src/__generated__/types'
+import { PostCommentsArgs, SortOrder } from '../src/__generated__/types'
 import { CommentMapper } from '../src/types'
 
 
 export const commentRepo = {
-    getComments: () => {
-        return comments;
-    },
-    batchGetCommentsByPostId: (keys: readonly { postId: string; args: PostCommentsArgs }[]) => {
+    getComments: (): CommentMapper[] => comments,
+    batchGetCommentsByPostId: (keys: readonly { postId: string; args: PostCommentsArgs }[]): Promise<CommentMapper[][]> => {
         const resultMap = new Map<string, CommentMapper[]>();
         for (const { postId, args } of keys) {
 

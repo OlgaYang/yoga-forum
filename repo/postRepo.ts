@@ -1,6 +1,6 @@
 import { posts, nextPostId as getNextPostId, } from '../src/data';
 import { PostMapper } from '../src/types';
-import { Post, QueryPostsArgs, SortOrder } from '../src/__generated__/types'
+import { QueryPostsArgs, SortOrder } from '../src/__generated__/types'
 
 
 export const postRepo = {
