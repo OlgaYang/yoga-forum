@@ -27,6 +27,7 @@ import {
   createRemoteJwksSigningKeyProvider,
   extractFromHeader,
   useJWT,
+  extractFromConnectionParams
 } from '@graphql-yoga/plugin-jwt'
 import { PostCommentsArgs } from './__generated__/types';
 
@@ -92,7 +93,8 @@ const plugins = [
       })
     ],
     tokenLookupLocations: [
-      extractFromHeader({ name: 'authorization', prefix: 'Bearer' })
+      extractFromHeader({ name: 'authorization', prefix: 'Bearer' }),
+      extractFromConnectionParams({ name: 'token' }),
     ],
     tokenVerification: {
       issuer: `https://securetoken.google.com/${firebaseProjectId}`,
@@ -103,7 +105,7 @@ const plugins = [
     reject: {
       missingToken: false,
       invalidToken: false
-    }
+    },
   }),
   useExtendContext(async (ctx) => {
     const jwt = ctx.jwt
@@ -134,17 +136,52 @@ const server = createServer(yoga);
 const wsServer = new WebSocketServer({
   server: server,
   path: '/graphql',
+  verifyClient: function (info, done) {
+
+    // verify auth => call jwt
+    if (!info.req.headers.authorization) {
+      done(false, 401, "Unauthorized");
+    }
+
+    // prevent cors
+    const origin = info.req.headers.origin;
+    if (origin !== 'http://localhost:5173') {
+      console.warn('Blocked WebSocket connection from origin:', origin);
+      return done(false, 403, 'Forbidden');
+    }
+
+    done(true); // 允許握手
+  }
 });
 
-useServer(
+
+
+const userver = useServer(
   {
     schema: yoga.getEnveloped().schema,
     execute: yoga.getEnveloped().execute,
     subscribe: yoga.getEnveloped().subscribe,
     context: yoga.getEnveloped().contextFactory,
+    onConnect: async (ctx) => {
+      // verify auth use jwt
+      const context = await yoga.getEnveloped().contextFactory({
+        connectionParams: ctx.connectionParams,
+      });
+
+      if (!context.jwt) {
+        return false
+      }
+
+      const request = ctx.extra.request;
+      // console.log('request onconect', request)
+
+      return true;
+
+    },
   },
   wsServer
 );
+
 
 server.listen(4000, () => {
   console.log('🚀 Yoga server running at http://localhost:4000/graphql');
