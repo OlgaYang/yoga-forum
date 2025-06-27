@@ -13,7 +13,7 @@ import { postRepo } from '../repo/postRepo';
 import { commentRepo } from '../repo/commentRepo';
 // subscription
 import { useServer } from 'graphql-ws/lib/use/ws';
-import { WebSocketServer } from 'ws';
+import { WebSocketServer, WebSocket, RawData } from 'ws';
 import { pubSub } from './pubsub';
 // metric
 import { usePrometheus } from '@graphql-yoga/plugin-prometheus'
@@ -33,6 +33,10 @@ import { PostCommentsArgs } from './__generated__/types';
 
 import { authDirectiveTransformer } from './directives/authDirective'
 import { UserMapper } from './types';
+
+// rate limit
+import { RateLimiterMemory } from 'rate-limiter-flexible'
+import { IncomingMessage } from 'http';
 
 const typeDefs = gql(readFileSync("./schema.graphql", "utf8"));
 let schema = makeExecutableSchema({ typeDefs, resolvers });
@@ -94,7 +98,7 @@ const plugins = [
     ],
     tokenLookupLocations: [
       extractFromHeader({ name: 'authorization', prefix: 'Bearer' }),
-      extractFromConnectionParams({ name: 'token' }),
+      // extractFromConnectionParams({ name: 'token' }),
     ],
     tokenVerification: {
       issuer: `https://securetoken.google.com/${firebaseProjectId}`,
@@ -132,29 +136,53 @@ const yoga = createYoga({
   graphiql: process.env.NODE_ENV !== 'production',
 });
 
+
+
 const server = createServer(yoga);
 const wsServer = new WebSocketServer({
   server: server,
   path: '/graphql',
+  maxPayload: 100,
   verifyClient: function (info, done) {
 
     // verify auth => call jwt
-    if (!info.req.headers.authorization) {
-      done(false, 401, "Unauthorized");
-    }
+    // if (!info.req.headers.authorization) {
+    //   done(false, 401, "Unauthorized");
+    // }
 
     // prevent cors
-    const origin = info.req.headers.origin;
-    if (origin !== 'http://localhost:5173') {
-      console.warn('Blocked WebSocket connection from origin:', origin);
-      return done(false, 403, 'Forbidden');
-    }
+    // const origin = info.req.headers.origin;
+    // if (origin !== 'http://localhost:5173') {
+    //   console.warn('Blocked WebSocket connection from origin:', origin);
+    //   return done(false, 403, 'Forbidden');
+    // }
 
     done(true); // 允許握手
   }
 });
 
 
+const rateLimiter = new RateLimiterMemory(
+  {
+    points: 5, // 5 points
+    duration: 1, // per second
+  });
+
+// wsServer.on('connection', (ws: WebSocket, req: IncomingMessage) => {
+//   const ip = req.socket.remoteAddress || 'unknown';
+
+//   ws.on('message', async (message) => {
+//     try {
+//       await rateLimiter.consume(ip);
+//       console.log(`Accepted from ${ip}:`, message.toString());
+//       ws.send(JSON.stringify({ event: 'echo', data: message.toString() }));
+//     } catch (rejRes: any) {
+//       console.warn(`Rate limit exceeded from ${ip}`);
+//       ws.send(JSON.stringify({ event: 'blocked', retryMs: rejRes.msBeforeNext }));
+//       ws.close(); // 或是選擇保留連線
+//     }
+//   });
+// });
 
 const userver = useServer(
   {
@@ -162,22 +190,22 @@ const userver = useServer(
     execute: yoga.getEnveloped().execute,
     subscribe: yoga.getEnveloped().subscribe,
     context: yoga.getEnveloped().contextFactory,
-    onConnect: async (ctx) => {
-      // verify auth use jwt
-      const context = await yoga.getEnveloped().contextFactory({
-        connectionParams: ctx.connectionParams,
-      });
+    // onConnect: async (ctx) => {
+    //   // verify auth use jwt
+    //   const context = await yoga.getEnveloped().contextFactory({
+    //     connectionParams: ctx.connectionParams,
+    //   });
 
-      if (!context.jwt) {
-        return false
-      }
+    //   if (!context.jwt) {
+    //     return false
+    //   }
 
-      const request = ctx.extra.request;
-      // console.log('request onconect', request)
+    //   const request = ctx.extra.request;
+    //   // console.log('request onconect', request)
 
-      return true;
+    //   return true;
 
-    },
+    // },
   },
   wsServer
 );
