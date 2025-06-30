@@ -5,6 +5,7 @@ import { commentRepo } from '../repo/commentRepo';
 import { pubSub } from './pubsub';
 import { CommentMapper, PostMapper, UserMapper } from './types';
 
+
 const POST_CREATED = 'POST_CREATED';
 
 export const resolvers: Resolvers = {
@@ -18,12 +19,26 @@ export const resolvers: Resolvers = {
             const post = await postRepo.createPost(context.user.id, content)
             pubSub.publish(POST_CREATED, post)
             return post;
+        },
+        sendHello: (_, args) => {
+            pubSub.publish('HELLO_WORLD', args.content);
+            pubSub.publish('HELLO_WORLD2', args.content);
+
+            return Promise.resolve(args.content)
         }
     },
     Subscription: {
         postCreated: {
             subscribe: () => pubSub.asyncIterableIterator(POST_CREATED),
             resolve: (post: PostMapper) => post,
+        },
+        helloWorld: {
+            subscribe: () => pubSub.asyncIterableIterator('HELLO_WORLD'),
+            resolve: (str: string) => str,
+        },
+        helloWorld2: {
+            subscribe: () => pubSub.asyncIterableIterator('HELLO_WORLD2'),
+            resolve: (str: string) => str,
         },
     },
     Post: {

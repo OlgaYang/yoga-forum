@@ -38,12 +38,17 @@ import { UserMapper } from './types';
 import { RateLimiterMemory } from 'rate-limiter-flexible'
 import { IncomingMessage } from 'http';
 
+//sse 
+import { useGraphQLSSE, } from '@graphql-yoga/plugin-graphql-sse';
+
+
 const typeDefs = gql(readFileSync("./schema.graphql", "utf8"));
 let schema = makeExecutableSchema({ typeDefs, resolvers });
 schema = authDirectiveTransformer(schema)
 
 const firebaseProjectId = "forum-74a03"
 const plugins = [
+  useGraphQLSSE,
   useDataLoader('users', () => new DataLoader<string, UserMapper>(userRepo.batchGetUsersById)),
   useDataLoader('posts', () => new DataLoader(postRepo.batchGetPostsByAuthorId)),
   useDataLoader('post', () => new DataLoader(postRepo.batchGetPostById)),
@@ -139,27 +144,27 @@ const yoga = createYoga({
 
 
 const server = createServer(yoga);
-const wsServer = new WebSocketServer({
-  server: server,
-  path: '/graphql',
-  maxPayload: 100,
-  verifyClient: function (info, done) {
+// const wsServer = new WebSocketServer({
+//   server: server,
+//   path: '/graphql',
+//   maxPayload: 100,
+//   verifyClient: function (info, done) {
 
-    // verify auth => call jwt
-    // if (!info.req.headers.authorization) {
-    //   done(false, 401, "Unauthorized");
-    // }
+//     // verify auth => call jwt
+//     // if (!info.req.headers.authorization) {
+//     //   done(false, 401, "Unauthorized");
+//     // }
 
-    // prevent cors
-    // const origin = info.req.headers.origin;
-    // if (origin !== 'http://localhost:5173') {
-    //   console.warn('Blocked WebSocket connection from origin:', origin);
-    //   return done(false, 403, 'Forbidden');
-    // }
+//     // prevent cors
+//     // const origin = info.req.headers.origin;
+//     // if (origin !== 'http://localhost:5173') {
+//     //   console.warn('Blocked WebSocket connection from origin:', origin);
+//     //   return done(false, 403, 'Forbidden');
+//     // }
 
-    done(true); // 允許握手
-  }
-});
+//     done(true); // 允許握手
+//   }
+// });
 
 
 const rateLimiter = new RateLimiterMemory(
@@ -184,31 +189,31 @@ const rateLimiter = new RateLimiterMemory(
 //   });
 // });
 
-const userver = useServer(
-  {
-    schema: yoga.getEnveloped().schema,
-    execute: yoga.getEnveloped().execute,
-    subscribe: yoga.getEnveloped().subscribe,
-    context: yoga.getEnveloped().contextFactory,
-    // onConnect: async (ctx) => {
-    //   // verify auth use jwt
-    //   const context = await yoga.getEnveloped().contextFactory({
-    //     connectionParams: ctx.connectionParams,
-    //   });
+// const userver = useServer(
+//   {
+//     schema: yoga.getEnveloped().schema,
+//     execute: yoga.getEnveloped().execute,
+//     subscribe: yoga.getEnveloped().subscribe,
+//     context: yoga.getEnveloped().contextFactory,
+//     // onConnect: async (ctx) => {
+//     //   // verify auth use jwt
+//     //   const context = await yoga.getEnveloped().contextFactory({
+//     //     connectionParams: ctx.connectionParams,
+//     //   });
 
-    //   if (!context.jwt) {
-    //     return false
-    //   }
+//     //   if (!context.jwt) {
+//     //     return false
+//     //   }
 
-    //   const request = ctx.extra.request;
-    //   // console.log('request onconect', request)
+//     //   const request = ctx.extra.request;
+//     //   // console.log('request onconect', request)
 
-    //   return true;
+//     //   return true;
 
-    // },
-  },
-  wsServer
-);
+//     // },
+//   },
+//   wsServer
+// );
 
 
 server.listen(4000, () => {

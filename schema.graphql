@@ -6,10 +6,13 @@
   type Mutation {
     createPost( content: String!): Post! @auth
     addComment( postId: ID!, content: String!): Comment! @auth
+    sendHello( content:String!):String!
   }
 
   type Subscription {
    postCreated: Post!
+   helloWorld: String!
+   helloWorld2: String!
   }
 
   type Post {
