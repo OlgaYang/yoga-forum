@@ -141,7 +141,7 @@ const server = createServer(yoga);
 const wsServer = new WebSocketServer({
   server: server,
   path: '/graphql',
-  maxPayload: 100,
+  maxPayload: 128 * 1024, // 128 KB
   verifyClient: function (info, done) {
     //prevent cors
     const origin = info.req.headers.origin;    

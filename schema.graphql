@@ -5,14 +5,11 @@
 
   type Mutation {
     createPost( content: String!): Post! @auth
-    addComment( postId: ID!, content: String!): Comment! @auth
-    sendHello( content:String!):String!
+    addComment( postId: ID!, content: String!): Comment! @auth    
   }
 
   type Subscription {
-   postCreated: Post!
-   helloWorld: String!
-   helloWorld2: String!
+   postCreated: Post!  
   }
 
   type Post {
