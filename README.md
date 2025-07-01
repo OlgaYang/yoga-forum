@@ -95,7 +95,8 @@ To authenticate your WebSocket connection, include your Bearer token in the conn
 {
   "token": "eyJhbGciOiJSUzI1NiIsImtpZCI6Ijg3NzQ4NTAwMmYwNWJlMDI2N2VmNDU5ZjViNTEzNTMzYjVjNThjMTIiLCJ0eXAiOiJKV1Qif....."
 }
+```
 
-If you only need to perform simple tests, it's recommended to use the [Altair GraphQL Client](https://altair.sirmuel.design/) — a convenient Google Chrome extension for testing GraphQL subscriptions.
+> If you only need to perform simple tests, it's recommended to use the [Altair GraphQL Client](https://altair.sirmuel.design/) — a convenient Google Chrome extension for testing GraphQL subscriptions.
 
 
