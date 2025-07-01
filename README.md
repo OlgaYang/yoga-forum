@@ -74,4 +74,13 @@ const wsServer = setupWebSocketServer(server, {
 });
 ```
 
+## WebSocket Authentication
+To authenticate your WebSocket connection, include your Bearer token in the connection parameters.  
+**Do not prepend the token with `"Bearer"`** — just pass the raw token string:
+
+```json
+{
+  "token": "eyJhbGciOiJSUzI1NiIsImtpZCI6Ijg3NzQ4NTAwMmYwNWJlMDI2N2VmNDU5ZjViNTEzNTMzYjVjNThjMTIiLCJ0eXAiOiJKV1Qif....."
+}
+
 
