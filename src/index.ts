@@ -38,6 +38,8 @@ import { UserMapper } from './types';
 import { RateLimiterMemory } from 'rate-limiter-flexible'
 import { IncomingMessage } from 'http';
 
+// websocket metric
+import {webSocketMetrics} from './websocketMetrics'
 
 const typeDefs = gql(readFileSync("./schema.graphql", "utf8"));
 let schema = makeExecutableSchema({ typeDefs, resolvers });
@@ -99,7 +101,7 @@ const plugins = [
     ],
     tokenLookupLocations: [
       extractFromHeader({ name: 'authorization', prefix: 'Bearer' }),
-      extractFromConnectionParams({ name: 'token' }),
+      //extractFromConnectionParams({ name: 'token' }),
     ],
     tokenVerification: {
       issuer: `https://securetoken.google.com/${firebaseProjectId}`,
@@ -137,17 +139,17 @@ const yoga = createYoga({
   graphiql: process.env.NODE_ENV !== 'production',
 });
 
-const server = createServer(yoga);
+const server = createServer();
 const wsServer = new WebSocketServer({
   server: server,
   path: '/graphql',
   maxPayload: 128 * 1024, // 128 KB
   verifyClient: function (info, done) {
     //prevent cors
-    const origin = info.req.headers.origin;    
-    if (origin !== 'http://localhost:5173') {    
-      return done(false, 403, 'Forbidden');
-    }
+    // const origin = info.req.headers.origin;    
+    // if (origin !== 'http://localhost:5173') {    
+    //   return done(false, 403, 'Forbidden');
+    // }
     done(true); 
   }
 });
@@ -170,6 +172,18 @@ wsServer.on('connection', (ws: WebSocket, req: IncomingMessage) => {
   });
 });
 
+const wsMetrics = webSocketMetrics(wsServer);
+
+server.on('request', async (req, res) => {
+  if (req.url === '/ws-metrics') {
+     res.writeHead(200, {'Content-Type': wsMetrics.contentType  });     
+     res.end(await wsMetrics.metrics());
+     return;
+  }
+
+  return yoga(req, res);
+});
+
 useServer(
   {
     schema: yoga.getEnveloped().schema,
@@ -177,6 +191,7 @@ useServer(
     subscribe: yoga.getEnveloped().subscribe,
     context: yoga.getEnveloped().contextFactory,
     onConnect: async (ctx) => {
+      return true;
       // verify auth use jwt
       const context = await yoga.getEnveloped().contextFactory({
         connectionParams: ctx.connectionParams,
@@ -184,7 +199,7 @@ useServer(
 
       if (!context.jwt) {
         return false
-      }    
+      }     
 
       return true;
     },    
