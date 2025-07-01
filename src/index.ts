@@ -12,8 +12,6 @@ import { userRepo } from '../repo/userRepo';
 import { postRepo } from '../repo/postRepo';
 import { commentRepo } from '../repo/commentRepo';
 // subscription
-import { useServer } from 'graphql-ws/lib/use/ws';
-import { WebSocketServer, WebSocket, RawData } from 'ws';
 import { pubSub } from './pubsub';
 // metric
 import { usePrometheus } from '@graphql-yoga/plugin-prometheus'
@@ -34,15 +32,9 @@ import { PostCommentsArgs } from './__generated__/types';
 import { authDirectiveTransformer } from './directives/authDirective'
 import { UserMapper } from './types';
 
-// rate limit
-import { RateLimiterMemory } from 'rate-limiter-flexible'
-import { IncomingMessage } from 'http';
-
 // websocket metric
 import {webSocketMetrics} from './websocketMetrics'
-
-
-import { applyConnectionLimit } from './connectionLimiter';
+import { setupWebSocketServer } from './setupWebsocket';
 
 const typeDefs = gql(readFileSync("./schema.graphql", "utf8"));
 let schema = makeExecutableSchema({ typeDefs, resolvers });
@@ -104,7 +96,7 @@ const plugins = [
     ],
     tokenLookupLocations: [
       extractFromHeader({ name: 'authorization', prefix: 'Bearer' }),
-      //extractFromConnectionParams({ name: 'token' }),
+      extractFromConnectionParams({ name: 'token' }),
     ],
     tokenVerification: {
       issuer: `https://securetoken.google.com/${firebaseProjectId}`,
@@ -143,75 +135,47 @@ const yoga = createYoga({
 });
 
 const server = createServer();
-const wsServer = new WebSocketServer({
-  server: server,
-  path: '/graphql',
-  maxPayload: 128 * 1024, // 128 KB
-  verifyClient: function (info, done) {
-    //prevent cors
-    // const origin = info.req.headers.origin;    
-    // if (origin !== 'http://localhost:5173') {    
-    //   return done(false, 403, 'Forbidden');
-    // }
-    done(true); 
+
+const wsSerever = setupWebSocketServer(server, {
+  cors: {
+    enable: false,
+    allowOrigins: ['http://localhost:5173']
+  },
+  rateLimit: {
+    enable: true,
+    points: 200,
+    duration: 1
+  },
+  connectionLimit: {
+    enable: true,
+    maxConnections: 100
+  },  
+  auth: {
+    enable: true,
+    verify: async (connectionParams) => {
+      const context = await yoga.getEnveloped().contextFactory({
+        connectionParams
+      })
+      return !!context.jwt
+    }
+  },
+  graphql: {
+    schema: yoga.getEnveloped().schema,
+    contextFactory: yoga.getEnveloped().contextFactory,
+    execute: yoga.getEnveloped().execute,
+    subscribe: yoga.getEnveloped().subscribe
   }
 });
 
-
-const rateLimiter = new RateLimiterMemory(
-  {
-    points: 5, // 5 points
-    duration: 1, // per second
-  });
-wsServer.on('connection', (ws: WebSocket, req: IncomingMessage) => {
-  const ip = req.socket.remoteAddress || 'unknown';
-  ws.on('message', async () => {
-    try {
-      await rateLimiter.consume(ip);          
-    } catch (rejRes: any) {     
-      ws.send(JSON.stringify({ event: 'blocked', retryMs: rejRes.msBeforeNext }));
-      ws.close(); 
-    }
-  });
-});
-
-applyConnectionLimit(wsServer, 2); 
-
-const wsMetrics = webSocketMetrics(wsServer);
-
+const wsMetrics = webSocketMetrics(wsSerever);
 server.on('request', async (req, res) => {
   if (req.url === '/ws-metrics') {
      res.writeHead(200, {'Content-Type': wsMetrics.contentType  });     
      res.end(await wsMetrics.metrics());
      return;
   }
-
   return yoga(req, res);
 });
-
-useServer(
-  {
-    schema: yoga.getEnveloped().schema,
-    execute: yoga.getEnveloped().execute,
-    subscribe: yoga.getEnveloped().subscribe,
-    context: yoga.getEnveloped().contextFactory,
-    onConnect: async (ctx) => {
-      return true;
-      // verify auth use jwt
-      const context = await yoga.getEnveloped().contextFactory({
-        connectionParams: ctx.connectionParams,
-      });
-
-      if (!context.jwt) {
-        return false
-      }     
-
-      return true;
-    },    
-  },
-  wsServer
-);
-
 
 server.listen(4000, () => {
   console.log('🚀 Yoga server running at http://localhost:4000/graphql');
