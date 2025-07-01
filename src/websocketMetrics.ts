@@ -45,6 +45,13 @@ export function webSocketMetrics(wsServer: WebSocketServer) {
   wsServer.on('connection', (ws: WebSocket, req: IncomingMessage) => {
     activeConnections.inc();
 
+    const originalSend: typeof ws.send = ws.send.bind(ws);
+    ws.send = ((data: any, ...args: any[]) => {
+      messageSent.inc();
+      bytesSent.inc(getRawDataSize(data));
+      return originalSend(data, ...args);
+    }) as typeof ws.send;
+
     ws.on('close', () => {
       activeConnections.dec();
       disconnectTotal.inc();
@@ -55,7 +62,7 @@ export function webSocketMetrics(wsServer: WebSocketServer) {
        bytesReceived.inc(getRawDataSize(data));
     });
 
-    function getRawDataSize(data: RawData): number {
+    function getRawDataSize(data: RawData): number {      
         if (typeof data === 'string') {
             return Buffer.byteLength(data);
         }
