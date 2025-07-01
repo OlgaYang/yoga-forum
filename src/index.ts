@@ -41,6 +41,9 @@ import { IncomingMessage } from 'http';
 // websocket metric
 import {webSocketMetrics} from './websocketMetrics'
 
+
+import { applyConnectionLimit } from './connectionLimiter';
+
 const typeDefs = gql(readFileSync("./schema.graphql", "utf8"));
 let schema = makeExecutableSchema({ typeDefs, resolvers });
 schema = authDirectiveTransformer(schema)
@@ -171,6 +174,8 @@ wsServer.on('connection', (ws: WebSocket, req: IncomingMessage) => {
     }
   });
 });
+
+applyConnectionLimit(wsServer, 2); 
 
 const wsMetrics = webSocketMetrics(wsServer);
 
