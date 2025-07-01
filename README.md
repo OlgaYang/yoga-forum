@@ -74,7 +74,20 @@ const wsServer = setupWebSocketServer(server, {
 });
 ```
 
-## WebSocket Authentication
+
+
+## Authentication
+
+### GraphQL HTTP
+
+Include your token in the request headers like this:
+
+```json
+{
+  "Authorization": "Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6Ijg3......."
+}
+```
+### WebSocket 
 To authenticate your WebSocket connection, include your Bearer token in the connection parameters.  
 **Do not prepend the token with `"Bearer"`** — just pass the raw token string:
 
@@ -82,5 +95,4 @@ To authenticate your WebSocket connection, include your Bearer token in the conn
 {
   "token": "eyJhbGciOiJSUzI1NiIsImtpZCI6Ijg3NzQ4NTAwMmYwNWJlMDI2N2VmNDU5ZjViNTEzNTMzYjVjNThjMTIiLCJ0eXAiOiJKV1Qif....."
 }
-
 
