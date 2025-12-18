@@ -20,6 +20,7 @@ export function webSocketMetrics(wsServer: WebSocketServer) {
     help: 'Total WebSocket messages received',
   });
 
+
   const messageSent = new Counter({
     name: 'ws_message_sent_total',
     help: 'Total WebSocket messages sent',
@@ -59,22 +60,22 @@ export function webSocketMetrics(wsServer: WebSocketServer) {
 
     ws.on('message', (data: RawData) => {
       messageReceived.inc();
-       bytesReceived.inc(getRawDataSize(data));
+      bytesReceived.inc(getRawDataSize(data));
     });
 
-    function getRawDataSize(data: RawData): number {      
-        if (typeof data === 'string') {
-            return Buffer.byteLength(data);
-        }
-        if (Buffer.isBuffer(data)) {
-            return data.length;
-        }
-        if (Array.isArray(data)) {
-            // fragmented message
-            return data.reduce((sum, part) => sum + Buffer.byteLength(part), 0);
-        }
-        // For ArrayBuffer or other views
-        return Buffer.byteLength(Buffer.from(data));
+    function getRawDataSize(data: RawData): number {
+      if (typeof data === 'string') {
+        return Buffer.byteLength(data);
+      }
+      if (Buffer.isBuffer(data)) {
+        return data.length;
+      }
+      if (Array.isArray(data)) {
+        // fragmented message
+        return data.reduce((sum, part) => sum + Buffer.byteLength(part), 0);
+      }
+      // For ArrayBuffer or other views
+      return Buffer.byteLength(Buffer.from(data));
     }
   });
 
