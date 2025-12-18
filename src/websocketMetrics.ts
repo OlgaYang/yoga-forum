@@ -28,7 +28,7 @@ export function webSocketMetrics(wsServer: WebSocketServer) {
 
   const bytesReceived = new Counter({
     name: 'ws_bytes_received',
-    help: 'Total bytes received from WebSocket customers',
+    help: 'Total bytes received from WebSocket clients',
   });
 
   const bytesSent = new Counter({
